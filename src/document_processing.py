@@ -16,7 +16,7 @@ def extract_pdf_pages(pdf_path: str | Path) -> list[dict[str, str | int]]:
     extracted_pages: list[dict[str, str | int]] = []
 
     for page_number, page in enumerate(reader.pages, start=1):
-        extracted_text = page.extract_text() or ""
+        extracted_text = page.extract_text(extraction_mode="layout") or ""
 
         page_record = {
             "document": path.name,

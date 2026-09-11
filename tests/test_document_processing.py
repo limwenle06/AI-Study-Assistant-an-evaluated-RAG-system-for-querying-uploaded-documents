@@ -6,7 +6,7 @@ class FakePage:
     def __init__(self, text: str | None) -> None:
         self.text = text
 
-    def extract_text(self) -> str | None:
+    def extract_text(self, extraction_mode: str = "plain") -> str | None:
         return self.text
 
 
