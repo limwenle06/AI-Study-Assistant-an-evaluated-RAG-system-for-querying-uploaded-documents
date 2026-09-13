@@ -1,7 +1,8 @@
 from types import SimpleNamespace
 from unittest.mock import Mock
 
-from src.embeddings import EMBEDDING_MODEL, embed_chunks
+import pytest
+from src.embeddings import EMBEDDING_MODEL, embed_chunks, embed_text
 
 
 def test_embed_chunks_adds_embeddings_and_preserves_metadata():
@@ -63,4 +64,28 @@ def test_embed_chunks_returns_empty_list_without_calling_api():
     embedded_chunks = embed_chunks([], client)
 
     assert embedded_chunks == []
+    client.embeddings.create.assert_not_called()
+
+
+def test_embed_text_returns_one_embedding():
+    client = Mock()
+    client.embeddings.create.return_value = SimpleNamespace(
+        data=[SimpleNamespace(embedding=[0.7, 0.8, 0.9])]
+    )
+
+    embedding = embed_text("What is artificial intelligence?", client)
+
+    client.embeddings.create.assert_called_once_with(
+        model=EMBEDDING_MODEL,
+        input="What is artificial intelligence?",
+    )
+    assert embedding == [0.7, 0.8, 0.9]
+
+
+def test_embed_text_rejects_empty_text_without_calling_api():
+    client = Mock()
+
+    with pytest.raises(ValueError, match="text cannot be empty"):
+        embed_text("   ", client)
+
     client.embeddings.create.assert_not_called()

@@ -1,7 +1,10 @@
 """Utilities for generating embeddings for document chunks."""
 
 from openai import OpenAI
+
+
 EMBEDDING_MODEL = "text-embedding-3-small"
+
 
 def embed_chunks(chunks: list[dict], client: OpenAI, model: str = EMBEDDING_MODEL) -> list[dict]:
     """Generate an embedding for each chunk while preserving its metadata."""
@@ -26,3 +29,15 @@ def embed_chunks(chunks: list[dict], client: OpenAI, model: str = EMBEDDING_MODE
         embedded_chunks.append(embedded_chunk)
 
     return embedded_chunks
+
+
+def embed_text(text: str, client: OpenAI, model: str = EMBEDDING_MODEL) -> list[float]:
+    """Generate one embedding for a single piece of text."""
+    if not text.strip():
+        raise ValueError("text cannot be empty")
+
+    response = client.embeddings.create(
+        model=model,
+        input=text,
+    )
+    return response.data[0].embedding
