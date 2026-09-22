@@ -7,6 +7,7 @@ from pathlib import Path
 from src.embeddings import EMBEDDING_MODEL
 
 DATABASE_PATH = Path("data/study_assistant.db")
+
 def calculate_file_hash(file_path: str | Path) -> str:
     """Calculate a SHA-256 fingerprint from a file's contents."""
     path = Path(file_path)
@@ -141,6 +142,45 @@ def find_document_by_hash(file_hash: str, db_path: str | Path = DATABASE_PATH) -
         "file_hash": row[2],
         "embedding_model": row[3],
     }
+
+
+def list_documents(db_path: str | Path = DATABASE_PATH) -> list[dict]:
+    """List saved PDFs and their chunk counts, newest first."""
+    initialize_database(db_path)
+
+    connection = sqlite3.connect(db_path)
+    try:
+        rows = connection.execute(
+            """
+            SELECT
+                documents.id,
+                documents.filename,
+                documents.file_hash,
+                documents.embedding_model,
+                documents.created_at,
+                COUNT(chunks.id)
+            FROM documents
+            LEFT JOIN chunks ON chunks.document_id = documents.id
+            GROUP BY documents.id
+            ORDER BY documents.created_at DESC, documents.id DESC
+            """
+        ).fetchall()
+        
+    finally:
+        connection.close()
+
+    documents = []
+    for row in rows:
+        documents.append({
+            "id": row[0],
+            "filename": row[1],
+            "file_hash": row[2],
+            "embedding_model": row[3],
+            "created_at": row[4],
+            "chunk_count": row[5],
+        })
+
+    return documents
 
 
 def load_document_chunks(document_id: int, db_path: str | Path = DATABASE_PATH) -> list[dict]:

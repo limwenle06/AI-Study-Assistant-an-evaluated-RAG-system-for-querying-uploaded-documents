@@ -7,6 +7,8 @@ import streamlit as st
 from dotenv import load_dotenv
 from openai import OpenAI
 
+from src.database import list_documents, load_document_chunks
+from src.embeddings import EMBEDDING_MODEL
 from src.pipeline import answer_question, process_document
 
 APP_TITLE = "AI Study Assistant"
@@ -25,6 +27,9 @@ def initialize_session_state() -> None:
     if "upload_hash" not in st.session_state:
         st.session_state.upload_hash = None
 
+    if "active_file_hash" not in st.session_state:
+        st.session_state.active_file_hash = None
+
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
@@ -41,6 +46,7 @@ def create_openai_client() -> OpenAI:
 def reset_active_document(upload_hash: str) -> None:
     """Clear the current document and chat when a different PDF is selected."""
     st.session_state.upload_hash = upload_hash
+    st.session_state.active_file_hash = None
     st.session_state.embedded_chunks = None
     st.session_state.document_name = None
     st.session_state.messages = []
@@ -87,7 +93,25 @@ def process_uploaded_pdf(uploaded_file) -> None:
 
     st.session_state.embedded_chunks = embedded_chunks
     st.session_state.document_name = safe_filename
+    st.session_state.active_file_hash = st.session_state.upload_hash
     st.session_state.messages = []
+
+
+def activate_saved_document(document: dict) -> None:
+    """Make a saved PDF active without processing it again."""
+    if document["embedding_model"] != EMBEDDING_MODEL:
+        raise ValueError("saved document uses a different embedding model")
+
+    embedded_chunks = load_document_chunks(document["id"])
+    if not embedded_chunks:
+        raise ValueError("saved document has no chunks")
+
+    st.session_state.embedded_chunks = embedded_chunks
+    st.session_state.document_name = document["filename"]
+    st.session_state.active_file_hash = document["file_hash"]
+    st.session_state.upload_hash = None
+    st.session_state.messages = []
+    st.session_state.active_page = "Home"
 
 
 def render_home_page() -> None:
@@ -199,15 +223,55 @@ def render_home_page() -> None:
 
 
 def render_pdfs_page() -> None:
-    """Display the placeholder for the saved PDF library."""
+    """List saved PDFs and let the user activate one."""
     st.caption("YOUR LIBRARY")
     st.title("PDFs")
-    with st.container(border=True, key="library_notice"):
-        st.caption("COMING NEXT")
-        st.write(
-            "Your saved PDF library is currently in progress. "
-            "It will be connected to the SQLite database in the next stage."
-        )
+    st.write("Choose a saved PDF to ask questions without uploading it again.")
+
+    try:
+        documents = list_documents()
+    except Exception as error:
+        with st.container(border=True, key="library_notice"):
+            st.write(f"Saved PDFs could not be loaded: {error}")
+        return
+
+    if not documents:
+        with st.container(border=True, key="library_notice"):
+            st.caption("NO SAVED PDFS")
+            st.write("Upload and process a PDF on Home to see it here.")
+        return
+
+    with st.container(border=True, key="library_list"):
+        with st.container(key="library_header"):
+            header_columns = st.columns([0.6, 3, 2, 1.2])
+            header_columns[0].caption("NO.")
+            header_columns[1].caption("NAME")
+            header_columns[2].caption("SAVED ON")
+            header_columns[3].caption("ACTION")
+
+        for index, document in enumerate(documents, start=1):
+            if index == len(documents):
+                row_key = f"library_last_row_{document['id']}"
+            else:
+                row_key = f"library_row_{document['id']}"
+
+            with st.container(key=row_key):
+                columns = st.columns([0.6, 3, 2, 1.2], vertical_alignment="center")
+                columns[0].markdown(f"**{index}**")
+                columns[1].write(document["filename"])
+                columns[1].caption(f"{document['chunk_count']} chunks")
+                columns[2].write(f"{document['created_at']}")
+
+                with columns[3]:
+                    if document["file_hash"] == st.session_state.active_file_hash:
+                        st.caption("ACTIVE")
+                    elif st.button("Use PDF", key=f"use_pdf_{document['id']}"):
+                        try:
+                            activate_saved_document(document)
+                        except Exception as error:
+                            st.write(f"Could not open this PDF: {error}")
+                        else:
+                            st.rerun()
 
 
 def main() -> None:
