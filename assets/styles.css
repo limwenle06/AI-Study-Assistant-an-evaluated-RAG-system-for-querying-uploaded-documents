@@ -1,0 +1,178 @@
+:root {
+    --wine: #290c19;
+    --berry: #2e0f1b;
+    --burgundy: #340f20;
+    --garnet: #683149;
+    --rose: #a8617a;
+    --blush: #f6e8ec;
+    --muted: #d8b8c3;
+    --border: #401f2c;
+}
+
+/* Keep the workspace calm and give the content room to breathe. */
+.block-container {
+    max-width: 880px;
+    padding-top: 4rem;
+    padding-bottom: 4rem;
+}
+
+h1, h2, h3 {
+    letter-spacing: -0.025em;
+}
+
+[data-testid="stCaptionContainer"] {
+    color: var(--muted);
+}
+
+/* A lighter sidebar makes navigation distinct from the main workspace. */
+[data-testid="stSidebar"] {
+    background: var(--burgundy);
+    border-right: 1px solid #a66b80;
+}
+
+[data-testid="stSidebarHeader"] {
+    height: 1.6rem !important;
+    margin-bottom: 0 !important;
+}
+
+[data-testid="stSidebarUserContent"] {
+    padding-top: 0.25rem !important;
+}
+
+.st-key-sidebar_brand,
+.st-key-sidebar_brand [data-testid="stVerticalBlock"] {
+    gap: 0.05rem !important;
+}
+
+.st-key-sidebar_brand h1,
+.st-key-sidebar_brand p {
+    margin: 0 !important;
+}
+
+[data-testid="stSidebar"] h1 {
+    font-size: 1.5rem;
+    line-height: 1.25;
+    margin-bottom: 0;
+}
+
+[data-testid="stSidebar"] hr {
+    height: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-top: 0.4px solid #571f33 !important;
+    margin: 0.65rem 0 0.75rem;
+}
+
+/* Navigation reads as a menu, not as a row of raised buttons. */
+[data-testid="stSidebar"] .st-key-nav_home button,
+[data-testid="stSidebar"] .st-key-nav_pdfs button {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 0.45rem;
+    color: var(--blush);
+    font-size: 1rem;
+    font-weight: 500;
+    justify-content: flex-start !important;
+    min-height: 2.15rem !important;
+    padding: 0.2rem 0.65rem !important;
+    text-align: left !important;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+[data-testid="stSidebar"] .st-key-nav_home button > div,
+[data-testid="stSidebar"] .st-key-nav_pdfs button > div {
+    justify-content: flex-start !important;
+}
+
+[data-testid="stSidebar"] .st-key-nav_home button:hover,
+[data-testid="stSidebar"] .st-key-nav_pdfs button:hover {
+    background: var(--garnet);
+    border: 1px solid var(--border);
+    color: var(--blush);
+}
+
+[data-testid="stSidebar"] .st-key-nav_home button[kind="primary"],
+[data-testid="stSidebar"] .st-key-nav_pdfs button[kind="primary"] {
+    background: var(--garnet);
+    border: 1px solid var(--border);
+    font-weight: 650;
+}
+
+[data-testid="stSidebar"] .st-key-nav_home {
+    margin-bottom: -0.5rem;
+}
+
+/* Status, feedback, and library placeholder share one card treatment. */
+.st-key-document_status,
+.st-key-library_notice,
+.st-key-question_feedback,
+.st-key-pdf_feedback {
+    background: var(--berry);
+    border: 0.7px solid var(--border) !important;
+    border-radius: 0.85rem;
+    padding: 0.9rem 1.1rem;
+}
+
+.st-key-document_status [data-testid="stCaptionContainer"],
+.st-key-library_notice [data-testid="stCaptionContainer"] {
+    color: #e8b9c9;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+}
+
+/* Keep the question and upload controls in the same palette. */
+[data-testid="stForm"],
+[data-testid="stFileUploaderDropzone"],
+[data-testid="stExpander"] {
+    background: var(--berry);
+    border: 0.7px solid var(--border);
+    border-radius: 0.85rem;
+}
+
+[data-testid="stTextInput"] input {
+    background: var(--wine);
+    border-color: var(--border);
+    color: var(--blush);
+}
+
+[data-testid="stTextInput"] input::placeholder {
+    color: var(--muted);
+    opacity: 0.8;
+}
+
+[data-testid="stFileUploaderDropzone"] button,
+[data-testid="stForm"] button,
+.st-key-process_pdf_button button {
+    background: #4a1b2f;
+    border: 0.2px solid #56152c !important;
+    color: var(--blush);
+}
+
+[data-testid="stFileUploaderDropzone"] button:hover,
+[data-testid="stForm"] button:hover,
+.st-key-process_pdf_button button:hover {
+    background: #81435d;
+    border-color: #c894a6 !important;
+    color: var(--blush);
+}
+
+button:focus-visible,
+input:focus-visible {
+    outline: 2px solid #e8b9c9;
+    outline-offset: 2px;
+}
+
+[data-testid="stChatMessage"] {
+    background: var(--berry);
+    border: 0.7px solid var(--border);
+    border-radius: 0.85rem;
+    padding-right: 1rem;
+}
+
+[data-testid="stMain"] hr {
+    height: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-top: 0.4px solid #381320 !important;
+}

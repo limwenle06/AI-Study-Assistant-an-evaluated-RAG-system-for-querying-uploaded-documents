@@ -11,6 +11,7 @@ from src.pipeline import answer_question, process_document
 
 APP_TITLE = "AI Study Assistant"
 CREATOR_NAME = "Lim Wen Le"
+STYLESHEET_PATH = Path(__file__).parent / "assets" / "styles.css"
 
 
 def initialize_session_state() -> None:
@@ -26,6 +27,9 @@ def initialize_session_state() -> None:
 
     if "messages" not in st.session_state:
         st.session_state.messages = []
+
+    if "active_page" not in st.session_state:
+        st.session_state.active_page = "Home"
 
 
 def create_openai_client() -> OpenAI:
@@ -88,19 +92,23 @@ def process_uploaded_pdf(uploaded_file) -> None:
 
 def render_home_page() -> None:
     """Display PDF upload controls and the question-answer interface."""
+    st.caption("YOUR STUDY SPACE")
     st.title("Study with your documents")
     st.write(
         "Upload a text-based PDF, then ask questions grounded in its content."
     )
 
-    if st.session_state.embedded_chunks is None:
-        st.info("Upload and process a PDF to begin asking questions.")
-    else:
-        chunk_count = len(st.session_state.embedded_chunks)
-        st.success(
-            f"{st.session_state.document_name} is ready — "
-            f"{chunk_count} chunks indexed."
-        )
+    with st.container(border=True, key="document_status"):
+        if st.session_state.embedded_chunks is None:
+            st.caption("NO ACTIVE DOCUMENT")
+            st.write("Upload and process a PDF to begin asking questions.")
+        else:
+            chunk_count = len(st.session_state.embedded_chunks)
+            st.caption("ACTIVE DOCUMENT")
+            st.write(
+                f"{st.session_state.document_name} is ready — "
+                f"{chunk_count} chunks indexed."
+            )
 
     display_chat_history()
 
@@ -109,19 +117,22 @@ def render_home_page() -> None:
             "Ask a question about your PDF",
             placeholder="What would you like to understand?",
             disabled=st.session_state.embedded_chunks is None,
+            key="question_input",
         )
-        question_submitted = st.form_submit_button(
-            "Ask",
-            type="primary",
-            use_container_width=True,
-            disabled=st.session_state.embedded_chunks is None,
-        )
+        with st.container(horizontal=True, horizontal_alignment="right"):
+            question_submitted = st.form_submit_button(
+                "Ask",
+                type="primary",
+                width="content",
+                disabled=st.session_state.embedded_chunks is None,
+            )
 
     if question_submitted:
         cleaned_question = question.strip()
 
         if not cleaned_question:
-            st.warning("Enter a question before pressing Ask.")
+            with st.container(border=True, key="question_feedback"):
+                st.write("Enter a question before pressing Ask.")
         else:
             st.session_state.messages.append({
                 "role": "user",
@@ -138,7 +149,8 @@ def render_home_page() -> None:
                     )
                     
             except Exception as error:
-                st.error(f"The question could not be answered: {error}")
+                with st.container(border=True, key="question_feedback"):
+                    st.write(f"The question could not be answered: {error}")
             
             else:
                 st.session_state.messages.append({
@@ -155,6 +167,7 @@ def render_home_page() -> None:
         "Click here to upload your PDF",
         type=["pdf"],
         accept_multiple_files=False,
+        key="pdf_uploader",
     )
 
     if uploaded_file is not None:
@@ -165,30 +178,36 @@ def render_home_page() -> None:
             reset_active_document(upload_hash)
             st.rerun()
 
-    process_clicked = st.button(
-        "Process PDF",
-        type="primary",
-        use_container_width=True,
-        disabled=uploaded_file is None,
-    )
+    with st.container(horizontal=True, horizontal_alignment="right"):
+        process_clicked = st.button(
+            "Process PDF",
+            type="primary",
+            width="content",
+            disabled=uploaded_file is None,
+            key="process_pdf_button",
+        )
 
     if process_clicked:
         try:
             with st.spinner("Preparing your PDF..."):
                 process_uploaded_pdf(uploaded_file)
         except Exception as error:
-            st.error(f"The PDF could not be processed: {error}")
+            with st.container(border=True, key="pdf_feedback"):
+                st.write(f"The PDF could not be processed: {error}")
         else:
             st.rerun()
 
 
 def render_pdfs_page() -> None:
     """Display the placeholder for the saved PDF library."""
+    st.caption("YOUR LIBRARY")
     st.title("PDFs")
-    st.info(
-        "Your saved PDF library is currently in progress. "
-        "It will be connected to the SQLite database in the next stage."
-    )
+    with st.container(border=True, key="library_notice"):
+        st.caption("COMING NEXT")
+        st.write(
+            "Your saved PDF library is currently in progress. "
+            "It will be connected to the SQLite database in the next stage."
+        )
 
 
 def main() -> None:
@@ -198,18 +217,43 @@ def main() -> None:
         page_icon="📕",
         layout="centered",
     )
+    st.html(STYLESHEET_PATH)
     initialize_session_state()
 
     with st.sidebar:
-        st.title(APP_TITLE)
-        st.caption(f"By {CREATOR_NAME}")
-        page = st.radio(
-            "Navigation",
-            ["Home", "PDFs"],
-            label_visibility="collapsed",
-        )
+        with st.container(key="sidebar_brand"):
+            st.caption("Your Document Space")
+            st.title(APP_TITLE)
+            st.caption(f"By {CREATOR_NAME}")
+        st.divider()
 
-    if page == "Home":
+        if st.button(
+            "Home",
+            type=(
+                "primary"
+                if st.session_state.active_page == "Home"
+                else "secondary"
+            ),
+            use_container_width=True,
+            key="nav_home",
+        ):
+            st.session_state.active_page = "Home"
+            st.rerun()
+
+        if st.button(
+            "PDFs",
+            type=(
+                "primary"
+                if st.session_state.active_page == "PDFs"
+                else "secondary"
+            ),
+            use_container_width=True,
+            key="nav_pdfs",
+        ):
+            st.session_state.active_page = "PDFs"
+            st.rerun()
+
+    if st.session_state.active_page == "Home":
         render_home_page()
     else:
         render_pdfs_page()
